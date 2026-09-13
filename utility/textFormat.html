@@ -1,143 +1,310 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>文字格式化工具 - 工具箱</title>
-  <!-- Bootstrap 5 CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <style>
-    /* 轉換後輸出區域的灰/黑字樣式控制 */
-    .output-box {
-      min-height: 120px;
-      white-space: pre-wrap;
-      word-break: break-all;
-    }
-    .text-placeholder {
-      color: #6c757d; /* Bootstrap 預設灰色 */
-    }
-    .text-actual {
-      color: #212529; /* Bootstrap 預設深黑字 */
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>通用文字與網址轉換工具</title>
+    <style>
+        :root {
+            --primary-color: #0066cc;
+            --primary-hover: #0052a3;
+            --bg-color: #f5f7fa;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --border-color: #cccccc;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background-color: var(--card-bg);
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--bg-color);
+            padding-bottom: 10px;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            margin: 0;
+        }
+
+        .back-link {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 1rem;
+            box-sizing: border-box;
+            font-family: inherit;
+        }
+
+        textarea {
+            height: 120px;
+            resize: vertical;
+        }
+
+        .action-area {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+
+        .label-with-btn {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .toast {
+            font-size: 0.85rem;
+            color: #28a745;
+            margin-left: 10px;
+            display: none;
+        }
+    </style>
 </head>
-<body class="bg-light">
+<body>
 
-  <div class="container py-4" style="max-width: 800px;">
-    <!-- 頂部導覽列 (保持不變) -->
-    <div class="d-flex gap-3 mb-3">
-      <a href="index.html" class="btn btn-outline-secondary btn-sm">← 回到工具箱首頁</a>
-      <a href="../index.html" class="btn btn-outline-secondary btn-sm">⌂ 回到網站主首頁</a>
+<div class="container">
+    <div class="header-bar">
+        <h1>文字與網址轉換工具</h1>
+        <a href="index.html" class="back-link">← 回到工具箱大廳</a>
     </div>
 
-    <!-- 頁面主標題 (保持不變) -->
-    <h2 class="fw-bold mb-4">文字格式化工具</h2>
-
-    <div class="card shadow-sm p-4 bg-white">
-      
-      <!-- 1. 轉換類型下拉選單 -->
-      <div class="mb-3">
-        <label for="convertType" class="form-label fw-bold">轉換類型</label>
-        <select class="form-select" id="convertType">
-          <option value="shopee" selected>Shopee 蝦皮網址轉換</option>
+    <!-- 1. 下拉選單區 -->
+    <div class="form-group">
+        <label for="convertType">選擇轉換類型：</label>
+        <select id="convertType" onchange="onTypeChange()">
+            <!-- 由 JS 動態根據 JSON 載入 -->
         </select>
-      </div>
-
-      <!-- 2. 轉換前標題 + 多行輸入框 (帶灰色範例文字) -->
-      <div class="mb-3">
-        <label for="inputSource" id="lblInputTitle" class="form-label fw-bold">轉換前網址</label>
-        <textarea 
-          class="form-rows-4 form-control" 
-          id="inputSource" 
-          rows="5" 
-          placeholder="https://shopee.tw/［現貨］彈力懶人鞋帶【指選好物】鞋帶-懶人鞋帶-免繫鞋帶-彈性鞋帶-免綁鞋帶-伸縮鞋帶-膠囊鞋扣-i.10605772.6160425741?extraParams=%7B%22display_model_id%22%3A109212113966%2C%22model_selection_logic%22%3A3%7D&sp_atk=4a7228b6-b38c-4220-be5b-8471a4ecf9f9&xptdk=4a7228b6-b38c-4220-be5b-8471a4ecf9f9"
-        ></textarea>
-      </div>
-
-      <!-- 轉換觸發按鈕 -->
-      <div class="d-grid gap-2 mb-4">
-        <button class="btn btn-primary" type="button" id="btnConvert">開始轉換</button>
-      </div>
-
-      <!-- 3. 轉換後標題 + 顯示區 (預設灰色範例，轉換成功為黑色文字) -->
-      <div class="mb-3">
-        <label id="lblOutputTitle" class="form-label fw-bold">轉換後網址</label>
-        <div id="outputResult" class="form-control output-box text-placeholder">https://shopee.tw/product/10605772/6160425741</div>
-      </div>
-
     </div>
-  </div>
 
-  <script>
-    const convertType = document.getElementById('convertType');
-    const inputSource = document.getElementById('inputSource');
-    const outputResult = document.getElementById('outputResult');
-    const btnConvert = document.getElementById('btnConvert');
+    <!-- 2. 轉換前文字輸入區 -->
+    <div class="form-group">
+        <label for="inputText">轉換前文字：</label>
+        <textarea id="inputText" placeholder="請在此輸入要轉換的內容..."></textarea>
+    </div>
 
-    // 範例資料定義
-    const configMap = {
-      shopee: {
-        inputPlaceholder: `https://shopee.tw/［現貨］彈力懶人鞋帶【指選好物】鞋帶-懶人鞋帶-免繫鞋帶-彈性鞋帶-免綁鞋帶-伸縮鞋帶-膠囊鞋扣-i.10605772.6160425741?extraParams=%7B%22display_model_id%22%3A109212113966%2C%22model_selection_logic%22%3A3%7D&sp_atk=4a7228b6-b38c-4220-be5b-8471a4ecf9f9&xptdk=4a7228b6-b38c-4220-be5b-8471a4ecf9f9`,
-        outputPlaceholder: `https://shopee.tw/product/10605772/6160425741`
-      }
+    <!-- 3. 按鈕區 -->
+    <div class="action-area">
+        <button onclick="handleConvert()">轉換</button>
+    </div>
+
+    <!-- 4. 轉換後文字區 (含複製按鈕) -->
+    <div class="form-group">
+        <div class="label-with-btn">
+            <label for="outputText" style="margin:0;">轉換後文字：</label>
+            <div>
+                <span id="copyToast" class="toast">已複製到剪貼簿！</span>
+                <button type="button" class="btn-secondary" onclick="copyToClipboard()">複製至剪貼簿</button>
+            </div>
+        </div>
+        <textarea id="outputText" placeholder="轉換結果將顯示於此..."></textarea>
+    </div>
+</div>
+
+<script>
+    // =========================================================================
+    // 設定檔 (JSON) - 未來新增選項或範例只需在此修改
+    // =========================================================================
+    const CONVERT_CONFIG = [
+        {
+            id: "shopee_short",
+            name: "蝦皮網址 -> 短網址範例",
+            sampleInput: "https://shopee.tw/product/12345678/9876543210?sp_atk=123456&xptdk=654321",
+            sampleOutput: "https://shope.ee/SAMPLE_SHORT_CODE"
+        },
+        {
+            id: "uppercase",
+            name: "英文轉大寫",
+            sampleInput: "hello world! github pages is awesome.",
+            sampleOutput: "HELLO WORLD! GITHUB PAGES IS AWESOME."
+        },
+        {
+            id: "remove_spaces",
+            name: "移除所有空格",
+            sampleInput: "這 是 一 段 帶 有 多 餘 空 格 的 文 字",
+            sampleOutput: "這是一段帶有多餘空格的文字"
+        }
+    ];
+
+    // =========================================================================
+    // 頁面初始化
+    // =========================================================================
+    window.onload = function() {
+        const selectElem = document.getElementById("convertType");
+        selectElem.innerHTML = "";
+
+        // 動態注入選單選項
+        CONVERT_CONFIG.forEach(item => {
+            const opt = document.createElement("option");
+            opt.value = item.id;
+            opt.textContent = item.name;
+            selectElem.appendChild(opt);
+        });
+
+        // 載入第一個項目的預設範例
+        onTypeChange();
     };
 
-    // 切換選項時動態更新預設引導範例
-    function updatePlaceholders() {
-      const type = convertType.value;
-      if (configMap[type]) {
-        inputSource.placeholder = configMap[type].inputPlaceholder;
-        outputResult.textContent = configMap[type].outputPlaceholder;
-        outputResult.className = "form-control output-box text-placeholder"; // 恢復灰色範例文字
-      }
-    }
+    // 當下拉選單切換時觸發
+    function onTypeChange() {
+        const selectedId = document.getElementById("convertType").value;
+        const config = CONVERT_CONFIG.find(c => c.id === selectedId);
 
-    // 蝦皮網址清理邏輯 (提取 Shop ID 與 Item ID)
-    function cleanShopeeUrl(text) {
-      if (!text.trim()) return '';
-      
-      // 正則匹配 -i.SHOPID.ITEMID 結構
-      const regex = /-i\.(\d+)\.(\d+)/;
-      const lines = text.split('\n');
-      const results = [];
-
-      lines.forEach(line => {
-        const match = line.match(regex);
-        if (match) {
-          const shopId = match[1];
-          const itemId = match[2];
-          results.push(`https://shopee.tw/product/${shopId}/${itemId}`);
-        } else if (line.trim() !== '') {
-          results.push('[格式不符] 無法提取商品 ID');
+        if (config) {
+            document.getElementById("inputText").value = config.sampleInput || "";
+            document.getElementById("outputText").value = config.sampleOutput || "";
         }
-      });
-
-      return results.join('\n');
     }
 
-    // 按鈕點擊轉換動作
-    btnConvert.addEventListener('click', () => {
-      const srcText = inputSource.value;
-      const type = convertType.value;
-      
-      if (!srcText.trim()) {
-        updatePlaceholders();
-        return;
-      }
+    // =========================================================================
+    // 主流程控管 (通用處理)
+    // =========================================================================
+    function handleConvert() {
+        const type = document.getElementById("convertType").value;
+        const inputVal = document.getElementById("inputText").value;
 
-      let converted = '';
-      if (type === 'shopee') {
-        converted = cleanShopeeUrl(srcText);
-      }
+        // 通用檢查：防呆
+        if (!inputVal.trim()) {
+            alert("請先輸入轉換前的文字！");
+            return;
+        }
 
-      if (converted) {
-        outputResult.textContent = converted;
-        outputResult.className = "form-control output-box text-actual"; // 轉為黑色實際文字
-      }
-    });
+        let result = "";
 
-    // 監聽下拉選單變更事件
-    convertType.addEventListener('change', updatePlaceholders);
-  </script>
+        // 根據類型派發給專用的副程式 (Sub-functions)
+        switch (type) {
+            case "shopee_short":
+                result = processShopeeUrl(inputVal);
+                break;
+            case "uppercase":
+                result = processUppercase(inputVal);
+                break;
+            case "remove_spaces":
+                result = processRemoveSpaces(inputVal);
+                break;
+            default:
+                alert("未知的轉換類型！");
+                return;
+        }
+
+        // 通用輸出寫入
+        document.getElementById("outputText").value = result;
+    }
+
+    // =========================================================================
+    // 各項專用轉換 logic (副程式區) - 方便獨立擴充與維護
+    // =========================================================================
+
+    // 1. 蝦皮網址轉換副程式 (範例邏輯)
+    function processShopeeUrl(rawText) {
+        // 這邊可放實作 logic，目前先做簡單示意
+        if (rawText.includes("shopee.tw")) {
+            return "https://shope.ee/PROCESSED_RESULT";
+        }
+        return rawText; // 若不符合則原樣回傳
+    }
+
+    // 2. 英文轉大寫副程式
+    function processUppercase(rawText) {
+        return rawText.toUpperCase();
+    }
+
+    // 3. 移除空格副程式
+    function processRemoveSpaces(rawText) {
+        return rawText.replace(/\s+/g, "");
+    }
+
+    // =========================================================================
+    // 複製至剪貼簿功能
+    // =========================================================================
+    function copyToClipboard() {
+        const outputElem = document.getElementById("outputText");
+        const textToCopy = outputElem.value;
+
+        if (!textToCopy) {
+            alert("沒有可複製的文字！");
+            return;
+        }
+
+        navigator.clipboard.writeText(textToCopy).then(() => {
+            const toast = document.getElementById("copyToast");
+            toast.style.display = "inline";
+            setTimeout(() => {
+                toast.style.display = "none";
+            }, 2000);
+        }).catch(err => {
+            // 舊版瀏覽器備援方案
+            outputElem.select();
+            document.execCommand("copy");
+            alert("已複製！");
+        });
+    }
+</script>
+
 </body>
 </html>
