@@ -83,11 +83,13 @@
 
         .action-area {
             display: flex;
+            flex-direction: column;
             gap: 10px;
             margin-bottom: 20px;
         }
 
         button {
+            width: 100%;
             background-color: var(--primary-color);
             color: white;
             border: none;
@@ -96,6 +98,7 @@
             border-radius: 4px;
             cursor: pointer;
             transition: background-color 0.2s;
+            box-sizing: border-box;
         }
 
         button:hover {
@@ -110,25 +113,19 @@
             background-color: #5a6268;
         }
 
-        .label-with-btn {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-
         .toast {
             font-size: 0.85rem;
             color: #28a745;
-            margin-left: 10px;
             display: none;
+            margin-top: 5px;
+            text-align: center;
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <!-- 1. 頂部導覽區 (採用早期版本結構與連結) -->
+    <!-- 1. 頂部導覽區 -->
     <div class="nav-bar">
         <a href="index.html">← 回到工具箱首頁</a>
         <a href="../index.html">⌂ 回到網站主首頁</a>
@@ -150,46 +147,47 @@
         <textarea id="inputText" placeholder="請在此輸入要轉換的內容..."></textarea>
     </div>
 
-    <!-- 4. 按鈕區 -->
+    <!-- 4. 按鈕區 (佔滿 100% 寬度) -->
     <div class="action-area">
         <button onclick="handleConvert()">轉換</button>
     </div>
 
-    <!-- 5. 轉換後文字區 (含複製按鈕) -->
+    <!-- 5. 轉換後文字區 -->
     <div class="form-group">
-        <div class="label-with-btn">
-            <label for="outputText" style="margin:0;">轉換後文字：</label>
-            <div>
-                <span id="copyToast" class="toast">已複製到剪貼簿！</span>
-                <button type="button" class="btn-secondary" onclick="copyToClipboard()">複製至剪貼簿</button>
-            </div>
-        </div>
+        <label for="outputText">轉換後文字：</label>
         <textarea id="outputText" placeholder="轉換結果將顯示於此..."></textarea>
+    </div>
+
+    <!-- 6. 底部複製與開啟按鈕區 (佔滿 100% 寬度) -->
+    <div class="action-area">
+        <button type="button" class="btn-secondary" onclick="copyToClipboard()">複製至剪貼簿</button>
+        <button type="button" id="openTabBtn" class="btn-secondary" onclick="copyAndOpenTab()">複製至剪貼簿並於新分頁開啟網址</button>
+        <div id="copyToast" class="toast">已複製到剪貼簿！</div>
     </div>
 </div>
 
 <script>
     // =========================================================================
-    // 設定檔 (JSON) - 未來新增選項或範例只需在此修改
+    // 設定檔 (JSON) - 增加 showOpenTab 標記，控制按鈕是否顯示
     // =========================================================================
     const CONVERT_CONFIG = [
         {
             id: "shopee_short",
             name: "Shopee 蝦皮網址轉換",
             sampleInput: "https://shopee.tw/［現貨］彈力懶人鞋帶【指選好物】鞋帶-懶人鞋帶-免繫鞋帶-彈性鞋帶-免綁鞋帶-伸縮鞋帶-膠囊鞋扣-i.10605772.6160425741?extraParams=%7B%22display_model_id%22%3A109212113966%2C%22model_selection_logic%22%3A3%7D&sp_atk=4a7228b6-b38c-4220-be5b-8471a4ecf9f9&xptdk=4a7228b6-b38c-4220-be5b-8471a4ecf9f9",
-            sampleOutput: "https://shopee.tw/product/10605772/6160425741"
+            showOpenTab: true // 只有此項目會顯示「開啟網址」按鈕
         },
         {
             id: "uppercase",
             name: "英文轉大寫",
             sampleInput: "hello world! github pages is awesome.",
-            sampleOutput: "HELLO WORLD! GITHUB PAGES IS AWESOME."
+            showOpenTab: false
         },
         {
             id: "remove_spaces",
             name: "移除所有空格",
             sampleInput: "這 是 一 段 帶 有 多 餘 空 格 的 文 字",
-            sampleOutput: "這是一段帶有多餘空格的文字"
+            showOpenTab: false
         }
     ];
 
@@ -200,7 +198,6 @@
         const selectElem = document.getElementById("convertType");
         selectElem.innerHTML = "";
 
-        // 動態注入選單選項
         CONVERT_CONFIG.forEach(item => {
             const opt = document.createElement("option");
             opt.value = item.id;
@@ -208,7 +205,7 @@
             selectElem.appendChild(opt);
         });
 
-        // 載入第一個項目的預設範例
+        // 頁面載入時載入第 1 個項目的預設範例並直接自動跑轉換
         onTypeChange();
     };
 
@@ -218,8 +215,19 @@
         const config = CONVERT_CONFIG.find(c => c.id === selectedId);
 
         if (config) {
+            // 帶入預設文字
             document.getElementById("inputText").value = config.sampleInput || "";
-            document.getElementById("outputText").value = config.sampleOutput || "";
+            
+            // 控制「複製並於新分頁開啟網址」按鈕的顯示/隱藏
+            const openTabBtn = document.getElementById("openTabBtn");
+            if (config.showOpenTab) {
+                openTabBtn.style.display = "block";
+            } else {
+                openTabBtn.style.display = "none";
+            }
+
+            // 自動直接跑一次轉換程式
+            handleConvert();
         }
     }
 
@@ -230,15 +238,13 @@
         const type = document.getElementById("convertType").value;
         const inputVal = document.getElementById("inputText").value;
 
-        // 通用檢查：防呆
         if (!inputVal.trim()) {
-            alert("請先輸入轉換前的文字！");
+            document.getElementById("outputText").value = "";
             return;
         }
 
         let result = "";
 
-        // 根據類型派發給專用的副程式 (Sub-functions)
         switch (type) {
             case "shopee_short":
                 result = processShopeeUrl(inputVal);
@@ -254,19 +260,15 @@
                 return;
         }
 
-        // 通用輸出寫入
         document.getElementById("outputText").value = result;
     }
 
     // =========================================================================
     // 各項專用轉換 logic (副程式區)
     // =========================================================================
-
-    // 1. 蝦皮網址轉換副程式 (移植自舊版正則表達式解析邏輯)
     function processShopeeUrl(rawText) {
         if (!rawText.trim()) return '';
         
-        // 正則匹配 -i.SHOPID.ITEMID 結構
         const regex = /-i\.(\d+)\.(\d+)/;
         const lines = rawText.split('\n');
         const results = [];
@@ -285,40 +287,62 @@
         return results.join('\n');
     }
 
-    // 2. 英文轉大寫副程式
     function processUppercase(rawText) {
         return rawText.toUpperCase();
     }
 
-    // 3. 移除空格副程式
     function processRemoveSpaces(rawText) {
         return rawText.replace(/\s+/g, "");
     }
 
     // =========================================================================
-    // 複製至剪貼簿功能
+    // 剪貼簿與開啟網址功能
     // =========================================================================
+    function showToast() {
+        const toast = document.getElementById("copyToast");
+        toast.style.display = "block";
+        setTimeout(() => {
+            toast.style.display = "none";
+        }, 2000);
+    }
+
     function copyToClipboard() {
         const outputElem = document.getElementById("outputText");
         const textToCopy = outputElem.value;
 
         if (!textToCopy) {
             alert("沒有可複製的文字！");
-            return;
+            return false;
         }
 
         navigator.clipboard.writeText(textToCopy).then(() => {
-            const toast = document.getElementById("copyToast");
-            toast.style.display = "inline";
-            setTimeout(() => {
-                toast.style.display = "none";
-            }, 2000);
+            showToast();
         }).catch(err => {
-            // 舊版瀏覽器備援方案
             outputElem.select();
             document.execCommand("copy");
-            alert("已複製！");
+            showToast();
         });
+
+        return true;
+    }
+
+    function copyAndOpenTab() {
+        const outputElem = document.getElementById("outputText");
+        const lines = outputElem.value.split('\n').filter(line => line.trim() !== '');
+
+        if (lines.length === 0) {
+            alert("沒有可複製與開啟的連結！");
+            return;
+        }
+
+        copyToClipboard();
+
+        const targetUrl = lines[0].trim();
+        if (targetUrl.startsWith("http://") || targetUrl.startsWith("https://")) {
+            window.open(targetUrl, '_blank');
+        } else {
+            alert("複製成功，但轉換結果的第一行不是有效的網址 (需包含 http:// 或 https://)");
+        }
     }
 </script>
 
