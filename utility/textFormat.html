@@ -1,66 +1,143 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>文字格式化工具 | Utility</title>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; line-height: 1.6; color: #333; }
-        .nav-bar { margin-bottom: 20px; display: flex; gap: 15px; }
-        .nav-bar a { color: #0366d6; text-decoration: none; font-size: 0.9em; }
-        .nav-bar a:hover { text-decoration: underline; }
-        textarea { width: 100%; height: 160px; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; box-sizing: border-box; }
-        .btn-group { margin: 15px 0; display: flex; gap: 10px; flex-wrap: wrap; }
-        button { padding: 8px 16px; background-color: #0366d6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
-        button:hover { background-color: #0255b3; }
-        button.secondary { background-color: #6c757d; }
-        button.secondary:hover { background-color: #5a6268; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>文字格式化工具 - 工具箱</title>
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    /* 轉換後輸出區域的灰/黑字樣式控制 */
+    .output-box {
+      min-height: 120px;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .text-placeholder {
+      color: #6c757d; /* Bootstrap 預設灰色 */
+    }
+    .text-actual {
+      color: #212529; /* Bootstrap 預設深黑字 */
+    }
+  </style>
 </head>
-<body>
+<body class="bg-light">
 
-    <div class="nav-bar">
-        <a href="index.html">← 回到工具箱首頁</a>
-        <a href="../index.html">⌂ 回到網站主首頁</a>
+  <div class="container py-4" style="max-width: 800px;">
+    <!-- 頂部導覽列 (保持不變) -->
+    <div class="d-flex gap-3 mb-3">
+      <a href="index.html" class="btn btn-outline-secondary btn-sm">← 回到工具箱首頁</a>
+      <a href="../index.html" class="btn btn-outline-secondary btn-sm">⌂ 回到網站主首頁</a>
     </div>
 
-    <h1>文字格式化工具</h1>
+    <!-- 頁面主標題 (保持不變) -->
+    <h2 class="fw-bold mb-4">文字格式化工具</h2>
 
-    <label for="inputText">輸入文字：</label>
-    <textarea id="inputText" placeholder="請在此貼上欲處理的文字..."></textarea>
+    <div class="card shadow-sm p-4 bg-white">
+      
+      <!-- 1. 轉換類型下拉選單 -->
+      <div class="mb-3">
+        <label for="convertType" class="form-label fw-bold">轉換類型</label>
+        <select class="form-select" id="convertType">
+          <option value="shopee" selected>Shopee 蝦皮網址轉換</option>
+        </select>
+      </div>
 
-    <div class="btn-group">
-        <button onclick="trimSpaces()">清除多餘空白</button>
-        <button onclick="toUpperCase()">轉為大寫 (UPPER)</button>
-        <button onclick="toLowerCase()">轉為小寫 (lower)</button>
-        <button class="secondary" onclick="clearAll()">清空內容</button>
+      <!-- 2. 轉換前標題 + 多行輸入框 (帶灰色範例文字) -->
+      <div class="mb-3">
+        <label for="inputSource" id="lblInputTitle" class="form-label fw-bold">轉換前網址</label>
+        <textarea 
+          class="form-rows-4 form-control" 
+          id="inputSource" 
+          rows="5" 
+          placeholder="https://shopee.tw/［現貨］彈力懶人鞋帶【指選好物】鞋帶-懶人鞋帶-免繫鞋帶-彈性鞋帶-免綁鞋帶-伸縮鞋帶-膠囊鞋扣-i.10605772.6160425741?extraParams=%7B%22display_model_id%22%3A109212113966%2C%22model_selection_logic%22%3A3%7D&sp_atk=4a7228b6-b38c-4220-be5b-8471a4ecf9f9&xptdk=4a7228b6-b38c-4220-be5b-8471a4ecf9f9"
+        ></textarea>
+      </div>
+
+      <!-- 轉換觸發按鈕 -->
+      <div class="d-grid gap-2 mb-4">
+        <button class="btn btn-primary" type="button" id="btnConvert">開始轉換</button>
+      </div>
+
+      <!-- 3. 轉換後標題 + 顯示區 (預設灰色範例，轉換成功為黑色文字) -->
+      <div class="mb-3">
+        <label id="lblOutputTitle" class="form-label fw-bold">轉換後網址</label>
+        <div id="outputResult" class="form-control output-box text-placeholder">https://shopee.tw/product/10605772/6160425741</div>
+      </div>
+
     </div>
+  </div>
 
-    <label for="outputText">處理結果：</label>
-    <textarea id="outputText" readonly placeholder="處理後的結果會顯示在這裡..."></textarea>
+  <script>
+    const convertType = document.getElementById('convertType');
+    const inputSource = document.getElementById('inputSource');
+    const outputResult = document.getElementById('outputResult');
+    const btnConvert = document.getElementById('btnConvert');
 
-    <script>
-        function trimSpaces() {
-            const input = document.getElementById('inputText').value;
-            // 清除首尾空白與行內重複空白
-            document.getElementById('outputText').value = input.trim().replace(/[ \t]+/g, ' ');
+    // 範例資料定義
+    const configMap = {
+      shopee: {
+        inputPlaceholder: `https://shopee.tw/［現貨］彈力懶人鞋帶【指選好物】鞋帶-懶人鞋帶-免繫鞋帶-彈性鞋帶-免綁鞋帶-伸縮鞋帶-膠囊鞋扣-i.10605772.6160425741?extraParams=%7B%22display_model_id%22%3A109212113966%2C%22model_selection_logic%22%3A3%7D&sp_atk=4a7228b6-b38c-4220-be5b-8471a4ecf9f9&xptdk=4a7228b6-b38c-4220-be5b-8471a4ecf9f9`,
+        outputPlaceholder: `https://shopee.tw/product/10605772/6160425741`
+      }
+    };
+
+    // 切換選項時動態更新預設引導範例
+    function updatePlaceholders() {
+      const type = convertType.value;
+      if (configMap[type]) {
+        inputSource.placeholder = configMap[type].inputPlaceholder;
+        outputResult.textContent = configMap[type].outputPlaceholder;
+        outputResult.className = "form-control output-box text-placeholder"; // 恢復灰色範例文字
+      }
+    }
+
+    // 蝦皮網址清理邏輯 (提取 Shop ID 與 Item ID)
+    function cleanShopeeUrl(text) {
+      if (!text.trim()) return '';
+      
+      // 正則匹配 -i.SHOPID.ITEMID 結構
+      const regex = /-i\.(\d+)\.(\d+)/;
+      const lines = text.split('\n');
+      const results = [];
+
+      lines.forEach(line => {
+        const match = line.match(regex);
+        if (match) {
+          const shopId = match[1];
+          const itemId = match[2];
+          results.push(`https://shopee.tw/product/${shopId}/${itemId}`);
+        } else if (line.trim() !== '') {
+          results.push('[格式不符] 無法提取商品 ID');
         }
+      });
 
-        function toUpperCase() {
-            const input = document.getElementById('inputText').value;
-            document.getElementById('outputText').value = input.toUpperCase();
-        }
+      return results.join('\n');
+    }
 
-        function toLowerCase() {
-            const input = document.getElementById('inputText').value;
-            document.getElementById('outputText').value = input.toLowerCase();
-        }
+    // 按鈕點擊轉換動作
+    btnConvert.addEventListener('click', () => {
+      const srcText = inputSource.value;
+      const type = convertType.value;
+      
+      if (!srcText.trim()) {
+        updatePlaceholders();
+        return;
+      }
 
-        function clearAll() {
-            document.getElementById('inputText').value = '';
-            document.getElementById('outputText').value = '';
-        }
-    </script>
+      let converted = '';
+      if (type === 'shopee') {
+        converted = cleanShopeeUrl(srcText);
+      }
 
+      if (converted) {
+        outputResult.textContent = converted;
+        outputResult.className = "form-control output-box text-actual"; // 轉為黑色實際文字
+      }
+    });
+
+    // 監聽下拉選單變更事件
+    convertType.addEventListener('change', updatePlaceholders);
+  </script>
 </body>
 </html>
