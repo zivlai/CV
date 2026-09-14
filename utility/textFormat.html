@@ -232,10 +232,10 @@
     </div>
 
     <!-- 3. 轉換前文字輸入區 (點擊或獲得焦點時自動全選) -->
-    <div class="form-group">
-        <label for="inputText">轉換前文字：</label>
-        <textarea id="inputText" class="textareaFrom" placeholder="請在此輸入要轉換的內容..." onclick="this.select()" onfocus="this.select()"></textarea>
-    </div>
+	<div class="form-group">
+		<label for="inputText">轉換前文字：</label>
+		<textarea id="inputText" class="textareaFrom" placeholder="請在此輸入要轉換的內容..."></textarea>
+	</div>
 
     <!-- 4. 按鈕與自動動作選項區 -->
     <div class="action-area">
@@ -416,22 +416,39 @@
         const lines = rawText.split('\n');
         const results = [];
 
-        lines.forEach(line => {
-            const trimmedLine = line.trim();
-            const match = trimmedLine.match(regex);
+		lines.forEach(line => {
+			const trimmedLine = line.trim();
 
-            // 使用 URL API 檢查是否為合法 http/https 網址
-            if (isValidHttpUrl(trimmedLine) && match) {
-                const shopId = match[1];
-                const itemId = match[2];
-                results.push(`https://shopee.tw/product/${shopId}/${itemId}`);
-            } else if (trimmedLine !== '') {
-                results.push('[格式不符] 無法提取商品 ID 或非有效網址');
-            }
-        });
+			// 排除空白行
+			if (trimmedLine === '') return;
 
-        return results.join('\n');
-    }
+			// 1. 先判斷 isValidHttpUrl(trimmedLine) 並存於變數
+			const isValidUrl = isValidHttpUrl(trimmedLine);
+
+			// 2. 用現在的方式判斷 match 並存於變數
+			const match = trimmedLine.match(regex);
+
+			// 3. 階層式 if 判斷式：
+			// NG 狀況 1：先判斷非有效網址
+			if (!isValidUrl) {
+				results.push('[格式不符] 非有效網址');
+				return;
+			}
+
+			// NG 狀況 2：再判斷無法提取商品 ID (match 為 null)
+			if (!match) {
+				results.push('[格式不符] 無法提取商品 ID');
+				return;
+			}
+
+			// 前面 2 個 NG 關卡都順利通過，才執行正確的流程
+			const shopId = match[1];
+			const itemId = match[2];
+			results.push(`https://shopee.tw/product/${shopId}/${itemId}`);
+		});
+		
+		return results.join('\n');
+	}
 
     function processUppercase(rawText) {
         return rawText.toUpperCase();
