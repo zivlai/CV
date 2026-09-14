@@ -28,7 +28,7 @@
             width: 100%;
             max-width: 800px;
             background-color: var(--card-bg);
-            padding: 30px;
+            padding: 30px 30px 20px 30px;
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
@@ -51,7 +51,7 @@
 
         h1 {
             font-size: 1.5rem;
-            margin: 0 0 20px 0;
+            margin: 0 0 10px 0;
             padding-bottom: 10px;
             border-bottom: 2px solid var(--bg-color);
         }
@@ -76,15 +76,20 @@
             font-family: inherit;
         }
 
-        textarea {
-            height: 120px;
+        .textareaFrom {
+            height: 115px;
+            resize: vertical;
+        }
+
+        .textareaTo {
+            height: 70px;
             resize: vertical;
         }
 
         .action-area {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 15px;
             margin-bottom: 20px;
         }
 
@@ -117,8 +122,93 @@
             font-size: 0.85rem;
             color: #28a745;
             display: none;
-            margin-top: 5px;
+            margin-top: 0px;
             text-align: center;
+        }
+
+        /* Frame (Fieldset) 與 Toggle Switch 樣式 */
+        .options-fieldset {
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 4px 16px;
+            margin: 0;
+            background-color: #fafafa;
+        }
+
+        .options-fieldset legend {
+            font-weight: bold;
+            font-size: 0.95rem;
+            color: var(--text-color);
+            padding: 0 6px;
+        }
+
+        .option-row {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 12px;
+            width: 100%;
+            padding: 8px 0;
+            box-sizing: border-box;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .option-row:not(:last-child) {
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .option-row label.option-text {
+            margin: 0;
+            cursor: pointer;
+            font-weight: normal;
+            font-size: 0.95rem;
+            line-height: 1;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            width: 46px;
+            height: 24px;
+            flex-shrink: 0;
+            margin: 0;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc;
+            transition: .3s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary-color);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(22px);
         }
     </style>
 </head>
@@ -141,41 +231,62 @@
         </select>
     </div>
 
-    <!-- 3. 轉換前文字輸入區 -->
+    <!-- 3. 轉換前文字輸入區 (點擊或獲得焦點時自動全選) -->
     <div class="form-group">
         <label for="inputText">轉換前文字：</label>
-        <textarea id="inputText" placeholder="請在此輸入要轉換的內容..."></textarea>
+        <textarea id="inputText" class="textareaFrom" placeholder="請在此輸入要轉換的內容..." onclick="this.select()" onfocus="this.select()"></textarea>
     </div>
 
-    <!-- 4. 按鈕區 (佔滿 100% 寬度) -->
+    <!-- 4. 按鈕與自動動作選項區 -->
     <div class="action-area">
+        <fieldset class="options-fieldset">
+            <legend>轉換選項</legend>
+            
+            <div class="option-row" onclick="document.getElementById('autoCopy').click()">
+                <label class="switch" onclick="event.stopPropagation()">
+                    <input type="checkbox" id="autoCopy" checked>
+                    <span class="slider"></span>
+                </label>
+                <label for="autoCopy" class="option-text" onclick="event.stopPropagation()">自動複製到剪貼簿</label>
+            </div>
+
+            <div class="option-row" onclick="document.getElementById('autoOpenTab').click()">
+                <label class="switch" onclick="event.stopPropagation()">
+                    <input type="checkbox" id="autoOpenTab">
+                    <span class="slider"></span>
+                </label>
+                <label for="autoOpenTab" class="option-text" onclick="event.stopPropagation()">若為網址則於新分頁開啟</label>
+            </div>
+        </fieldset>
+
         <button onclick="handleConvert()">轉換</button>
     </div>
 
     <!-- 5. 轉換後文字區 -->
     <div class="form-group">
         <label for="outputText">轉換後文字：</label>
-        <textarea id="outputText" placeholder="轉換結果將顯示於此..."></textarea>
+        <textarea id="outputText" class="textareaTo" placeholder="轉換結果將顯示於此..."></textarea>
     </div>
 
-    <!-- 6. 底部複製與開啟按鈕區 (佔滿 100% 寬度) -->
+    <!-- 6. 底部複製與開啟按鈕區 -->
     <div class="action-area">
         <button type="button" class="btn-secondary" onclick="copyToClipboard()">複製至剪貼簿</button>
-        <button type="button" id="openTabBtn" class="btn-secondary" onclick="copyAndOpenTab()">複製至剪貼簿並於新分頁開啟網址</button>
-        <div id="copyToast" class="toast">已複製到剪貼簿！</div>
+        <button type="button" id="openTabBtn" class="btn-secondary" onclick="copyAndOpenTab()">複製至剪貼簿並於新分頁開啟網址</button>        
     </div>
+    <div id="copyToast" class="toast">已複製到剪貼簿！</div>
+    
 </div>
 
 <script>
-    // =========================================================================
-    // 設定檔 (JSON) - 增加 showOpenTab 標記，控制按鈕是否顯示
-    // =========================================================================
+    // 標記是否為首次載入頁面的初始化
+    let isInitialLoad = true;
+
     const CONVERT_CONFIG = [
         {
             id: "shopee_short",
             name: "Shopee 蝦皮網址轉換",
             sampleInput: "https://shopee.tw/［現貨］彈力懶人鞋帶【指選好物】鞋帶-懶人鞋帶-免繫鞋帶-彈性鞋帶-免綁鞋帶-伸縮鞋帶-膠囊鞋扣-i.10605772.6160425741?extraParams=%7B%22display_model_id%22%3A109212113966%2C%22model_selection_logic%22%3A3%7D&sp_atk=4a7228b6-b38c-4220-be5b-8471a4ecf9f9&xptdk=4a7228b6-b38c-4220-be5b-8471a4ecf9f9",
-            showOpenTab: true // 只有此項目會顯示「開啟網址」按鈕
+            showOpenTab: true
         },
         {
             id: "uppercase",
@@ -191,9 +302,6 @@
         }
     ];
 
-    // =========================================================================
-    // 頁面初始化
-    // =========================================================================
     window.onload = function() {
         const selectElem = document.getElementById("convertType");
         selectElem.innerHTML = "";
@@ -205,20 +313,20 @@
             selectElem.appendChild(opt);
         });
 
-        // 頁面載入時載入第 1 個項目的預設範例並直接自動跑轉換
+        // 開頁時預設先將「若為網址則於新分頁開啟」設為未勾選 (Unchecked)
+        document.getElementById("autoOpenTab").checked = false;
+
+        // 載入第一個預設範例
         onTypeChange();
     };
 
-    // 當下拉選單切換時觸發
     function onTypeChange() {
         const selectedId = document.getElementById("convertType").value;
         const config = CONVERT_CONFIG.find(c => c.id === selectedId);
 
         if (config) {
-            // 帶入預設文字
             document.getElementById("inputText").value = config.sampleInput || "";
             
-            // 控制「複製並於新分頁開啟網址」按鈕的顯示/隱藏
             const openTabBtn = document.getElementById("openTabBtn");
             if (config.showOpenTab) {
                 openTabBtn.style.display = "block";
@@ -226,14 +334,11 @@
                 openTabBtn.style.display = "none";
             }
 
-            // 自動直接跑一次轉換程式
+            // 執行轉換
             handleConvert();
         }
     }
 
-    // =========================================================================
-    // 主流程控管 (通用處理)
-    // =========================================================================
     function handleConvert() {
         const type = document.getElementById("convertType").value;
         const inputVal = document.getElementById("inputText").value;
@@ -261,11 +366,39 @@
         }
 
         document.getElementById("outputText").value = result;
+
+        // 【修改點】利用 setTimeout 稍微延遲 0 毫秒，確保焦點與全選能順利在瀏覽器渲染完成後觸發
+        setTimeout(() => {
+            const inputElem = document.getElementById("inputText");
+            inputElem.focus();
+            inputElem.select();
+        }, 0);
+
+        const autoCopyElem = document.getElementById("autoCopy");
+        const autoOpenTabElem = document.getElementById("autoOpenTab");
+
+        // 處理【首次開啟網頁的自動執行】邏輯
+        if (isInitialLoad) {
+            // 首次執行時只做複製 (若有勾選)，絕對不安裝/打開新分頁
+            if (autoCopyElem.checked) {
+                copyToClipboard();
+            }
+            // 執行完首次轉換後，自動將開關設為 checked，並解除首次載入標記
+            autoOpenTabElem.checked = true;
+            isInitialLoad = false;
+            return;
+        }
+
+        // 非首次載入（使用者手動點擊「轉換」按鈕或切換選項時）
+        if (autoCopyElem.checked) {
+            copyToClipboard();
+        }
+
+        if (autoOpenTabElem.checked) {
+            openUrlInNewTab(result);
+        }
     }
 
-    // =========================================================================
-    // 各項專用轉換 logic (副程式區)
-    // =========================================================================
     function processShopeeUrl(rawText) {
         if (!rawText.trim()) return '';
         
@@ -295,17 +428,15 @@
         return rawText.replace(/\s+/g, "");
     }
 
-    // =========================================================================
-    // 剪貼簿與開啟網址功能
-    // =========================================================================
     function showToast() {
         const toast = document.getElementById("copyToast");
         toast.style.display = "block";
         setTimeout(() => {
             toast.style.display = "none";
-        }, 2000);
+        }, 3000);
     }
 
+    // 採用隱藏 textarea + execCommand("copy") 以靜默複製，不觸發系統彈窗詢問
     function copyToClipboard() {
         const outputElem = document.getElementById("outputText");
         const textToCopy = outputElem.value;
@@ -315,15 +446,33 @@
             return false;
         }
 
-        navigator.clipboard.writeText(textToCopy).then(() => {
-            showToast();
-        }).catch(err => {
-            outputElem.select();
+        const tempTextArea = document.createElement("textarea");
+        tempTextArea.value = textToCopy;
+        document.body.appendChild(tempTextArea);
+        tempTextArea.select();
+        
+        try {
             document.execCommand("copy");
             showToast();
-        });
+        } catch (err) {
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                showToast();
+            });
+        } finally {
+            document.body.removeChild(tempTextArea);
+        }
 
         return true;
+    }
+
+    function openUrlInNewTab(textVal) {
+        const lines = (textVal || "").split('\n').filter(line => line.trim() !== '');
+        if (lines.length === 0) return;
+
+        const targetUrl = lines[0].trim();
+        if (targetUrl.startsWith("http://") || targetUrl.startsWith("https://")) {
+            window.open(targetUrl, '_blank');
+        }
     }
 
     function copyAndOpenTab() {
