@@ -330,9 +330,18 @@
         const config = CONVERT_CONFIG.find(c => c.id === selectedId);
 
         if (config) {
-            document.getElementById("inputText").value = config.sampleInput || "";
-            // 執行轉換
-            handleConvert();
+			// 將首次載入狀態重置為 true
+			isInitialLoad = true;
+
+			// 切換時先取消勾選兩個選項
+			document.getElementById("autoCopy").checked = false;isInitialLoad
+			document.getElementById("autoOpenTab").checked = false;
+
+			document.getElementById("inputText").value = config.sampleInput || "";
+			
+			// 執行轉換
+			handleConvert();
+	
         }
     }
 
