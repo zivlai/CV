@@ -244,7 +244,7 @@
             
             <div class="option-row" onclick="document.getElementById('autoCopy').click()">
                 <label class="switch" onclick="event.stopPropagation()">
-                    <input type="checkbox" id="autoCopy" checked>
+                    <input type="checkbox" id="autoCopy">
                     <span class="slider"></span>
                 </label>
                 <label for="autoCopy" class="option-text" onclick="event.stopPropagation()">自動複製到剪貼簿</label>
@@ -321,9 +321,6 @@
             selectElem.appendChild(opt);
         });
 
-        // 開頁時預設先將「若為網址則於新分頁開啟」設為未勾選 (Unchecked)
-        document.getElementById("autoOpenTab").checked = false;
-
         // 載入第一個預設範例
         onTypeChange();
     };
@@ -394,7 +391,8 @@
             if (autoCopyElem.checked) {
                 copyToClipboard();
             }
-            autoOpenTabElem.checked = true;
+            autoCopyElem.checked = true;
+			autoOpenTabElem.checked = true;
             isInitialLoad = false;
             return;
         }
