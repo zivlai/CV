@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube 網址指定時間 | Utility</title>
+    <style>
+        :root {
+            --primary-color: #0066cc;
+            --primary-hover: #0052a3;
+            --bg-color: #f5f7fa;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --border-color: #cccccc;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background-color: var(--card-bg);
+            padding: 30px 30px 20px 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-bar {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-bar a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-size: 0.9em;
+        }
+
+        .nav-bar a:hover {
+            text-decoration: underline;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            margin: 0 0 10px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--bg-color);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+		fieldset div label {
+			margin-bottom: 0px;
+		}
+
+        select, textarea, input[type="number"] {
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 1rem;
+            box-sizing: border-box;
+            font-family: inherit;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 10px;
+        }
+
+        .textareaFrom {
+            height: 70px;
+            resize: vertical;
+        }
+
+        .textareaTo {
+            height: 70px;
+            resize: vertical;
+        }
+
+        .action-area {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            width: 100%;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            box-sizing: border-box;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+
+        .toast {
+            font-size: 0.85rem;
+            color: #28a745;
+            display: none;
+            margin-top: 0px;
+            text-align: center;
+        }
+
+        /* Frame (Fieldset) 與 Toggle Switch 樣式 */
+        .options-fieldset {
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 4px 16px;
+            margin: 0;
+            background-color: #fafafa;
+        }
+
+        .options-fieldset legend {
+            font-weight: bold;
+            font-size: 0.95rem;
+            color: var(--text-color);
+            padding: 0 6px;
+        }
+
+        /* 時間輸入區 Responsive 樣式 */
+        .time-input-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .time-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .time-input-row input[type="number"] {
+            width: 55px;
+            padding: 6px 8px;
+            text-align: center;
+        }
+
+        .option-row {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 12px;
+            width: 100%;
+            padding: 8px 0;
+            box-sizing: border-box;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .option-row:not(:last-child) {
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .option-row label.option-text {
+            margin: 0;
+            cursor: pointer;
+            font-weight: normal;
+            font-size: 0.95rem;
+            line-height: 1;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            width: 46px;
+            height: 24px;
+            flex-shrink: 0;
+            margin: 0;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc;
+            transition: .3s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary-color);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(22px);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- 1. 頂部導覽區 -->
+    <div class="nav-bar">
+        <a href="index.html">← 回到工具箱首頁</a>
+        <a href="../index.html">⌂ 回到網站主首頁</a>
+    </div>
+
+    <h1>YouTube 網址指定時間</h1>
+
+    <!-- 2. 轉換前網址輸入區 -->
+    <div class="form-group">
+        <label for="inputText">轉換前網址：</label>
+        <textarea id="inputText" class="textareaFrom" placeholder="請在此輸入要轉換的 YouTube 網址..."></textarea>
+    </div>
+
+    <!-- 3. 按鈕與自動動作選項區 -->
+    <div class="action-area">
+        <fieldset class="options-fieldset">
+            <legend>轉換選項</legend>
+            
+            <!-- 時間設定區塊 (支援 RWD 自動換行) -->
+            <div class="time-input-row">
+                <div class="time-group">
+                    <input type="number" id="inputHour" min="0" value="0">
+                    <label for="inputHour" class="option-text">Hour</label>
+                </div>
+                <div class="time-group">
+                    <input type="number" id="inputMinute" min="0" value="1">
+                    <label for="inputMinute" class="option-text">Minute</label>
+                </div>
+                <div class="time-group">
+                    <input type="number" id="inputSecond" min="0" value="2">
+                    <label for="inputSecond" class="option-text">Second</label>
+                </div>
+            </div>
+
+            <div class="option-row" onclick="document.getElementById('formatHMS').click()">
+                <label class="switch" onclick="event.stopPropagation()">
+                    <input type="checkbox" id="formatHMS" checked>
+                    <span class="slider"></span>
+                </label>
+                <label for="formatHMS" class="option-text" onclick="event.stopPropagation()">網址使用時分秒格式</label>
+            </div>
+
+
+            <div class="option-row" onclick="document.getElementById('autoCopy').click()">
+                <label class="switch" onclick="event.stopPropagation()">
+                    <input type="checkbox" id="autoCopy">
+                    <span class="slider"></span>
+                </label>
+                <label for="autoCopy" class="option-text" onclick="event.stopPropagation()">自動複製到剪貼簿</label>
+            </div>
+
+            <div class="option-row" onclick="document.getElementById('autoOpenTab').click()">
+                <label class="switch" onclick="event.stopPropagation()">
+                    <input type="checkbox" id="autoOpenTab">
+                    <span class="slider"></span>
+                </label>
+                <label for="autoOpenTab" class="option-text" onclick="event.stopPropagation()">若網址格式正常則於新分頁開啟</label>
+            </div>
+        </fieldset>
+
+        <button onclick="handleConvert()">轉換</button>
+    </div>
+
+    <!-- 4. 轉換後網址區 -->
+    <div class="form-group">
+        <label for="outputText">轉換後網址：</label>
+        <textarea id="outputText" class="textareaTo" placeholder="轉換結果將顯示於此..."></textarea>
+    </div>
+
+    <!-- 5. 底部複製與開啟按鈕區 -->
+    <div class="action-area">
+        <button type="button" class="btn-secondary" onclick="copyToClipboard()">複製至剪貼簿</button>
+        <button type="button" id="openTabBtn" class="btn-secondary" onclick="copyAndOpenTab()">複製至剪貼簿並於新分頁開啟網址</button>        
+    </div>
+    <div id="copyToast" class="toast">已複製到剪貼簿！</div>
+    
+</div>
+
+<script>
+    // 標記是否為首次載入頁面的初始化
+    let isInitialLoad = true;
+
+    // 預設示範網址
+    const SAMPLE_INPUT = "https://www.youtube.com/watch?v=oa1qKT-VJvo";
+
+    // 通用的 URL 驗證函式 (使用原生 new URL API)
+    function isValidHttpUrl(string) {
+        if (!string) return false;
+        try {
+            const url = new URL(string.trim());
+            return url.protocol === "http:" || url.protocol === "https:";
+        } catch (_) {
+            return false;
+        }
+    }
+
+    window.onload = function() {
+        // 載入時將預設示範網址填入輸入框
+        document.getElementById("inputText").value = SAMPLE_INPUT;
+        
+        // 首次初始化轉換
+        onInitLoad();
+    };
+
+    function onInitLoad() {
+        // 將首次載入狀態重置為 true
+        isInitialLoad = true;
+
+        // 切換/載入時先取消勾選兩個選項
+        document.getElementById("autoCopy").checked = false;
+        document.getElementById("autoOpenTab").checked = false;
+
+        // 執行轉換
+        handleConvert();
+    }
+
+    function handleConvert() {
+        const inputVal = document.getElementById("inputText").value;
+
+        if (!inputVal.trim()) {
+            document.getElementById("outputText").value = "";
+            document.getElementById("openTabBtn").style.display = "none";
+            return;
+        }
+
+        const result = processYouTubeUrl(inputVal);
+
+        document.getElementById("outputText").value = result;
+
+        // 動態判斷轉換結果第一行是否為合法網址，來決定「複製至剪貼簿並於新分頁開啟網址」按鈕的顯隱
+        const lines = result.split('\n').filter(line => line.trim() !== '');
+        const firstLine = lines.length > 0 ? lines[0].trim() : '';
+        const openTabBtn = document.getElementById("openTabBtn");
+
+        if (isValidHttpUrl(firstLine)) {
+            openTabBtn.style.display = "block";
+        } else {
+            openTabBtn.style.display = "none";
+        }
+
+        // 利用 setTimeout 確保焦點與全選順利觸發
+        setTimeout(() => {
+            const inputElem = document.getElementById("inputText");
+            inputElem.focus();
+            inputElem.select();
+        }, 0);
+
+        const autoCopyElem = document.getElementById("autoCopy");
+        const autoOpenTabElem = document.getElementById("autoOpenTab");
+
+        // 處理【首次開啟網頁的自動執行】邏輯
+        if (isInitialLoad) {
+            if (autoCopyElem.checked) {
+                copyToClipboard();
+            }
+            autoCopyElem.checked = true;
+            autoOpenTabElem.checked = true;
+            isInitialLoad = false;
+            return;
+        }
+
+        // 非首次載入
+        if (autoCopyElem.checked) {
+            copyToClipboard();
+        }
+
+        if (autoOpenTabElem.checked) {
+            openUrlInNewTab(result);
+        }
+    }
+
+    function processYouTubeUrl(rawText) {
+        if (!rawText.trim()) return '';
+
+        const hours = parseInt(document.getElementById("inputHour").value, 10) || 0;
+        const minutes = parseInt(document.getElementById("inputMinute").value, 10) || 0;
+        const seconds = parseInt(document.getElementById("inputSecond").value, 10) || 0;        
+
+		// 1. 讀取「網址使用時分秒格式」開關狀態
+		const isHMS = document.getElementById("formatHMS").checked;
+
+		// 2. 根據開關狀態決定時間參數字串 (tParam)
+		let tParam = "";
+		if (isHMS) {
+			let parts = [];
+			if (hours > 0) {
+				parts.push(hours + "h");
+			}
+			if (minutes > 0) {
+				parts.push(minutes + "m");
+			} 
+			if ((seconds > 0) || (hours === 0 && minutes === 0)) {
+				parts.push(seconds + "s");
+			}
+			tParam = parts.join("");
+		} else {
+			// 沒勾選時，維持原本的純總秒數格式
+			const totalSeconds = (hours * 3600) + (minutes * 60) + seconds;
+			tParam = totalSeconds + "s";
+		}
+
+        const lines = rawText.split('\n');
+        const results = [];
+
+        lines.forEach(line => {
+            const trimmedLine = line.trim();
+
+            // 排除空白行
+            if (trimmedLine === '') return;
+
+            // 1. 判斷是否為有效 URL
+            const isValidUrl = isValidHttpUrl(trimmedLine);
+
+            if (!isValidUrl) {
+                results.push('[格式不符] 非有效網址');
+                return;
+            }
+
+            try {
+                const urlObj = new URL(trimmedLine);
+                const host = urlObj.hostname.replace('www.', '');
+
+                // 2. 判斷是不是 YouTube 網址
+                if (host === 'youtube.com' || host === 'm.youtube.com' || host === 'youtu.be') {
+                    // 移除既存的 t 參數（若有）並設定新的時間參數
+					urlObj.searchParams.set('t', tParam);
+                    results.push(urlObj.toString());
+                } else {
+                    results.push('[格式不符] 非 YouTube 網址');
+                }
+            } catch (_) {
+                results.push('[格式不符] 解析網址失敗');
+            }
+        });
+
+        return results.join('\n');
+    }
+
+    function showToast() {
+        const toast = document.getElementById("copyToast");
+        toast.style.display = "block";
+        setTimeout(() => {
+            toast.style.display = "none";
+        }, 3000);
+    }
+
+    function copyToClipboard() {
+        const outputElem = document.getElementById("outputText");
+        const textToCopy = outputElem.value;
+
+        if (!textToCopy) {
+            return false;
+        }
+
+        // 檢查：若轉換後結果包含「[格式不符]」，則不複製到剪貼簿
+        if (textToCopy.includes("[格式不符]")) {
+            return false;
+        }
+
+        const tempTextArea = document.createElement("textarea");
+        tempTextArea.value = textToCopy;
+        document.body.appendChild(tempTextArea);
+        tempTextArea.select();
+        
+        try {
+            document.execCommand("copy");
+            showToast();
+        } catch (err) {
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                showToast();
+            });
+        } finally {
+            document.body.removeChild(tempTextArea);
+        }
+
+        return true;
+    }
+
+    function openUrlInNewTab(textVal) {
+        const lines = (textVal || "").split('\n').filter(line => line.trim() !== '');
+        if (lines.length === 0) return;
+
+        const targetUrl = lines[0].trim();
+        if (isValidHttpUrl(targetUrl)) {
+            window.open(targetUrl, '_blank');
+        }
+    }
+
+    function copyAndOpenTab() {
+        const outputElem = document.getElementById("outputText");
+        const lines = outputElem.value.split('\n').filter(line => line.trim() !== '');
+
+        if (lines.length === 0) {
+            return;
+        }
+
+        const targetUrl = lines[0].trim();
+        if (isValidHttpUrl(targetUrl)) {
+            copyToClipboard();
+            window.open(targetUrl, '_blank');
+        }
+    }
+</script>
+
+</body>
+</html>
