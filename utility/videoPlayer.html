@@ -706,12 +706,27 @@
 
     // 全螢幕狀態下的鍵盤監聽（加上 isFrameMode 旗標判斷）
     document.addEventListener('keydown', function (e) {
-        // 只有在全螢幕，且是從「逐幀區的全螢幕按鈕」觸發時，才攔截左右鍵執行逐幀切換
+        // 只有在全螢幕，且是從「逐幀區的全螢幕按鈕」進入時才處理
         if (document.fullscreenElement && isFrameMode) {
             if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
                 e.preventDefault();
                 e.stopPropagation();
-                handleFrameNav(e.key === 'ArrowRight' ? 1 : -1);
+
+                // 判斷影片是否暫停中
+                if (video.paused) {
+                    // 1. 暫停中：照設定幀數/逐幀移動
+                    handleFrameNav(e.key === 'ArrowRight' ? 1 : -1);
+                } else {
+                    // 2. 播放中：照設定秒數快進/倒退
+                    const rewindSec = parseFloat(document.getElementById('rewindSec').value) || 10;
+                    const forwardSec = parseFloat(document.getElementById('forwardSec').value) || 30;
+                    
+                    if (e.key === 'ArrowLeft') {
+                        executeSeek(-rewindSec);
+                    } else {
+                        executeSeek(forwardSec);
+                    }
+                }
             }
         }
     }, true);
