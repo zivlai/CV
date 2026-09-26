@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>影片播放器 | Utility</title>
+    <!-- 載入 mp4box.js -->
+    <script src="https://cdn.jsdelivr.net/npm/mp4box@0.5.2/dist/mp4box.all.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #0066cc;
+            --primary-hover: #0052a3;
+            --bg-color: #f5f7fa;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --border-color: #cccccc;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background-color: var(--card-bg);
+            padding: 30px 30px 20px 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-bar {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-bar a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-size: 0.9em;
+        }
+
+        .nav-bar a:hover {
+            text-decoration: underline;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            margin: 0 0 10px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--bg-color);
+        }
+
+        .video-wrapper {
+            width: 100%;
+            background-color: #000;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            outline: none;
+        }
+
+        video {
+            width: 100%;
+            max-height: 500px;
+            display: block;
+        }
+
+        .action-area {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .options-fieldset {
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 12px 16px;
+            margin: 0;
+            background-color: #fafafa;
+            outline: none;
+        }
+
+        .options-fieldset:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.2);
+        }
+
+        .options-fieldset legend {
+            font-weight: bold;
+            font-size: 0.95rem;
+            color: var(--text-color);
+            padding: 0 6px;
+        }
+
+        .options-fieldset.disabled {
+            opacity: 0.55;
+            pointer-events: none;
+        }
+
+        .control-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .control-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .control-row label {
+            margin: 0;
+            white-space: nowrap;
+        }
+
+        select, input[type="number"], input[type="text"] {
+            padding: 8px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 0.95rem;
+            box-sizing: border-box;
+            font-family: inherit;
+        }
+
+        /* 無外框之 Input File & 按鈕右側間距 */
+        input[type="file"] {
+            border: none;
+            padding: 8px 0;
+            font-size: 0.95rem;
+            box-sizing: border-box;
+            font-family: inherit;
+        }
+
+        input[type="file"]::-webkit-file-upload-button {
+            margin-right: 10px;
+        }
+
+        input[type="file"]::-moz-file-upload-button {
+            margin-right: 10px;
+        }
+
+        select {
+            width: 100%;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            width: 100%;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            font-size: 0.95rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            box-sizing: border-box;
+            white-space: nowrap;
+        }
+
+        button:hover:not(:disabled) {
+            background-color: var(--primary-hover);
+        }
+
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background-color: #5a6268;
+        }
+
+        .btn-nav {
+            padding: 8px 12px;
+            min-width: 40px;
+        }
+
+        .info-panel {
+            font-size: 0.85rem;
+            color: #555;
+            background-color: #eef2f7;
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin-top: 10px;
+            line-height: 1.5;
+        }
+
+        .toast {
+            font-size: 0.85rem;
+            color: #28a745;
+            display: none;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background-color: #fff;
+            width: 90%;
+            max-width: 450px;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-header {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 8px;
+        }
+
+        .modal-body {
+            margin-bottom: 20px;
+        }
+
+        .format-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="nav-bar">
+        <a href="index.html">← 回到線上工具首頁</a>
+        <a href="../index.html">⌂ 回到網站主首頁</a>
+    </div>
+
+    <h1>影片播放器</h1>
+
+    <div class="action-area">
+        <!-- 1. 影片檔案載入區 -->
+        <fieldset class="options-fieldset">
+            <legend>影片檔案</legend>
+            <input type="file" id="videoInput" accept="video/*" onchange="loadVideo(event)" style="width: 100%;">
+        </fieldset>
+
+        <!-- 2. 影片播放區 -->
+        <div class="video-wrapper" id="videoWrapper" tabindex="0">
+            <video id="videoPlayer" controls></video>
+        </div>
+
+        <!-- 3. 秒數及前後切換 -->
+        <fieldset class="options-fieldset" id="seekArea" tabindex="0">
+            <legend>秒數及前後快轉</legend>
+            <div class="control-row" style="justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                <!-- 左側：倒退/快進設定 -->
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <label for="rewindSec">倒退：</label>
+                    <input type="number" id="rewindSec" value="10" min="1" max="300" style="width: 65px;">
+                    <span style="margin-right: 10px;">秒</span>
+
+                    <label for="forwardSec">快進：</label>
+                    <input type="number" id="forwardSec" value="30" min="1" max="300" style="width: 65px;">
+                    <span>秒</span>
+                </div>
+
+                <!-- 右側：目前時間與複製按鈕 (寬度改為 140px) -->
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <label for="currentTimeDisplay">目前時間：</label>
+                    <input type="text" id="currentTimeDisplay" value="00:00:00.000" readonly style="width: 140px; text-align: center; font-family: monospace; background-color: #f0f0f0;">
+                    <button type="button" class="btn-secondary" onclick="copyCurrentTime('sec')">複製至 s</button>
+                    <button type="button" class="btn-secondary" onclick="copyCurrentTime('ms')">複製至 ms</button>
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- 4. 變速播放區 -->
+        <fieldset class="options-fieldset">
+            <legend>播放速度 (跨瀏覽器 Chrome / Edge / Firefox / Safari)</legend>
+            <div class="control-row" style="gap: 15px;">
+                <div style="display: flex; align-items: center; gap: 6px; flex: 1;">
+                    <button type="button" class="btn-nav" onclick="stepSpeed(-1)">◄</button>
+                    <select id="speedSelect" onchange="changeSpeedSafe(this.value)">
+						<option value="0.0625">0.0625x (Firefox Unsupported)</option>
+						<option value="0.1">0.1x (Firefox Unsupported)</option>
+						<option value="0.25">0.25x</option>
+						<option value="0.5">0.5x</option>
+						<option value="1.0" selected>1.0x</option>
+						<option value="1.25">1.25x</option>
+						<option value="1.5">1.5x</option>
+						<option value="2.0">2.0x</option>
+						<option value="5.0">5.0x</option>
+						<option value="10.0">10.0x (Firefox Unsupported)</option>
+						<option value="16.0">16.0x (Firefox Unsupported)</option>
+                    </select>
+                    <button type="button" class="btn-nav" onclick="stepSpeed(1)">►</button>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 6px; white-space: nowrap;">
+                    <label for="speedDelayInput">停頓：</label>
+                    <input type="number" id="speedDelayInput" value="80" min="10" max="3000" step="10" style="width: 70px;">
+                    <span>ms</span>
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- 5. 截圖功能區 -->
+        <fieldset class="options-fieldset">
+            <legend>影片截圖</legend>
+            <button type="button" class="btn-secondary" style="width: 100%;" onclick="openScreenshotModal()">擷取當前畫面</button>
+        </fieldset>
+
+        <!-- 6. 逐幀播放區 (按鈕更名為 全螢幕) -->
+        <fieldset class="options-fieldset disabled" id="frameArea" tabindex="0">
+            <legend>逐幀播放 (需先進行讀取幀數資訊)</legend>
+            <div class="control-row" style="flex-wrap: wrap; gap: 10px;">
+                <button type="button" id="btnParseFrame" onclick="startParseFrames()">讀取幀數資訊</button>
+                <button type="button" id="btnExportCSV" class="btn-secondary" onclick="exportFramesToCSV()" disabled>匯出幀數資訊 CSV</button>
+                <button type="button" id="btnFullscreenFrame" class="btn-secondary" onclick="enterFullscreenFrameMode()" disabled>全螢幕</button>
+                
+                <div class="btn-group" style="width: auto; margin-left: auto;">
+                    <button type="button" class="btn-nav" id="btnPrevFrame" onclick="handleFrameNav(-1)" disabled>◄</button>
+                    <input type="number" id="frameStep" min="1" max="99" value="01" oninput="formatTwoDigits(this)" style="width: 60px; text-align: center;" disabled>
+                    <button type="button" class="btn-nav" id="btnNextFrame" onclick="handleFrameNav(1)" disabled>►</button>
+                </div>
+            </div>
+            <div class="info-panel" id="parsedFrameInfo" style="display: none;"></div>
+        </fieldset>
+    </div>
+
+    <div id="toastMsg" class="toast">操作已完成！</div>
+</div>
+
+<!-- 截圖 Modal -->
+<div class="modal-overlay" id="screenshotModal">
+    <div class="modal-content">
+        <div class="modal-header">儲存畫面截圖</div>
+        <div class="modal-body">
+            <div class="format-option">
+                <input type="radio" id="fmtJpg" name="imgFormat" value="image/jpeg" checked>
+                <label for="fmtJpg">JPG 格式 - 預估大小: <span id="jpgSize">計算中...</span></label>
+            </div>
+            <div class="format-option">
+                <input type="radio" id="fmtPng" name="imgFormat" value="image/png">
+                <label for="fmtPng">PNG 格式 - 預估大小: <span id="pngSize">計算中...</span></label>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-secondary" onclick="closeScreenshotModal()">取消</button>
+            <button type="button" onclick="downloadScreenshot()">儲存</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const video = document.getElementById('videoPlayer');
+    const speedSelect = document.getElementById('speedSelect');
+    const speedDelayInput = document.getElementById('speedDelayInput');
+    const frameStepInput = document.getElementById('frameStep');
+    const parsedFrameInfo = document.getElementById('parsedFrameInfo');
+    const frameArea = document.getElementById('frameArea');
+    const seekArea = document.getElementById('seekArea');
+    const videoWrapper = document.getElementById('videoWrapper');
+    const btnExportCSV = document.getElementById('btnExportCSV');
+    const btnPrevFrame = document.getElementById('btnPrevFrame');
+    const btnNextFrame = document.getElementById('btnNextFrame');
+    const btnFullscreenFrame = document.getElementById('btnFullscreenFrame');
+    const currentTimeDisplay = document.getElementById('currentTimeDisplay');
+
+    let currentFile = null;
+    let detectedFPS = 30;
+    let frameTimes = []; 
+    let isFrameParsed = false;
+    let frameInfoSummary = "";
+    
+    // 【新增 Flag】紀錄是否經由逐幀播放區進入全螢幕
+    let isFrameMode = false;
+
+    let snapshotCanvas = null;
+    let jpgBlob = null;
+    let pngBlob = null;
+
+    function formatTwoDigits(input) {
+        if (input.value.length > 2) {
+            input.value = input.value.slice(0, 2);
+        }
+    }
+
+    const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+    // 時間格式化：hh:mm:ss.sss
+    function formatTimeWithMs(seconds) {
+        if (isNaN(seconds) || seconds < 0) return "00:00:00.000";
+        
+        const hrs = Math.floor(seconds / 3600);
+        const mins = Math.floor((seconds % 3600) / 60);
+        const secs = Math.floor(seconds % 60);
+        const ms = Math.floor((seconds % 1) * 1000);
+
+        const hh = String(hrs).padStart(2, '0');
+        const mm = String(mins).padStart(2, '0');
+        const ss = String(secs).padStart(2, '0');
+        const sss = String(ms).padStart(3, '0');
+
+        return `${hh}:${mm}:${ss}.${sss}`;
+    }
+
+    // 影片時間更新事件
+    video.addEventListener('timeupdate', () => {
+        currentTimeDisplay.value = formatTimeWithMs(video.currentTime);
+    });
+
+    // 複製時間：字串處理方式 (s 複製 hh:mm:ss，ms 複製全長)
+    function copyCurrentTime(type) {
+        let copyText = "";
+        const fullTimeStr = currentTimeDisplay.value; // 例如 "00:12:31.709"
+
+        if (type === 'sec') {
+            copyText = fullTimeStr.split('.')[0]; // 取小數點前的 "00:12:31"
+        } else {
+            copyText = fullTimeStr;               // 取完整 "00:12:31.709"
+        }
+
+        navigator.clipboard.writeText(copyText).then(() => {
+            showToast(`已複製：${copyText}`);
+        }).catch(err => {
+            console.error('複製失敗:', err);
+        });
+    }
+
+    // 1. 載入影片
+    function loadVideo(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        currentFile = file;
+        video.src = URL.createObjectURL(file);
+
+        isFrameParsed = false;
+        frameTimes = [];
+        frameArea.classList.remove('disabled');
+        document.getElementById('btnParseFrame').disabled = false;
+        btnExportCSV.disabled = true;
+        btnPrevFrame.disabled = true;
+        btnNextFrame.disabled = true;
+        btnFullscreenFrame.disabled = true;
+        frameStepInput.disabled = true;
+        parsedFrameInfo.style.display = 'none';
+        frameInfoSummary = "";
+    }
+
+    // 單次變速子程式
+    async function applySpeedStep(targetRate, delayMs) {
+        const isPlaying = !video.paused && !video.ended;
+        if (isPlaying) {
+            video.pause();
+            video.playbackRate = targetRate;
+            await sleep(delayMs);
+            try {
+                await video.play();
+            } catch (err) {
+                console.warn("播放恢復失敗:", err);
+            }
+        } else {
+            video.playbackRate = targetRate;
+        }
+    }
+
+    // 2. 變速播放主功能
+    async function changeSpeedSafe(targetVal) {
+        const targetSpeed = parseFloat(targetVal);
+        const currentSpeed = video.playbackRate;
+        const delayMs = parseInt(speedDelayInput.value, 10) || 80;
+
+        if (currentSpeed < 0.25 && targetSpeed > 5.0) {
+            video.playbackRate = 1.0;
+            if (video.paused) {
+                try { await video.play(); } catch(e){}
+            }
+            await sleep(500);
+            await applySpeedStep(targetSpeed, delayMs);
+        } else {
+            await applySpeedStep(targetSpeed, delayMs);
+        }
+    }
+
+    function stepSpeed(direction) {
+        let currIdx = speedSelect.selectedIndex;
+        let targetIdx = Math.max(0, Math.min(speedSelect.options.length - 1, currIdx + direction));
+        speedSelect.selectedIndex = targetIdx;
+        changeSpeedSafe(speedSelect.value);
+    }
+
+    // 3. 逐幀解析
+    function startParseFrames() {
+        if (!currentFile) return;
+
+        parsedFrameInfo.style.display = 'block';
+        parsedFrameInfo.innerHTML = '正在讀取幀資訊...';
+        frameTimes = [];
+
+        const mp4boxfile = MP4Box.createFile();
+        const reader = new FileReader();
+
+        mp4boxfile.onReady = function (info) {
+            const videoTrack = info.tracks.find(t => t.type === "video");
+            if (videoTrack) {
+                detectedFPS = videoTrack.video.fps || (videoTrack.nb_samples / (videoTrack.duration / videoTrack.timescale)) || 30;
+                mp4boxfile.setExtractionOptions(videoTrack.id, null, { nbSamples: 1000 });
+            }
+        };
+
+        mp4boxfile.onSamples = function (id, user, samples) {
+            samples.forEach(sample => {
+                frameTimes.push(sample.cts / sample.timescale);
+            });
+        };
+
+        reader.onload = function (e) {
+            const buffer = e.target.result;
+            buffer.fileStart = 0;
+            mp4boxfile.appendBuffer(buffer);
+            mp4boxfile.flush();
+            
+            setTimeout(() => {
+                finishParsing();
+            }, 300);
+        };
+
+        reader.readAsArrayBuffer(currentFile);
+    }
+
+    function finishParsing() {
+        isFrameParsed = true;
+        btnExportCSV.disabled = false;
+        btnPrevFrame.disabled = false;
+        btnNextFrame.disabled = false;
+        btnFullscreenFrame.disabled = false;
+        frameStepInput.disabled = false;
+
+        if (frameTimes.length > 0) {
+            frameInfoSummary = `
+                <strong>解析成功！(精確 Mode)</strong><br>
+                - 偵測幀率 (FPS): ${detectedFPS.toFixed(2)}<br>
+                - 已精確讀取 ${frameTimes.length} 幀的時間索引。
+            `;
+        } else {
+            frameInfoSummary = `
+                <strong>已啟用逐幀功能！(FPS 查表 Mode)</strong><br>
+                - 偵測幀率 (FPS): ${detectedFPS.toFixed(2)}<br>
+                - 說明：標頭無 Sample 表格，已自動切換為 FPS 數學計算模式。
+            `;
+        }
+
+        parsedFrameInfo.innerHTML = frameInfoSummary;
+        showToast("幀資訊準備就緒！");
+    }
+
+    // 逐幀跳轉
+    function handleFrameNav(direction) {
+        if (!isFrameParsed) return;
+        if (!video.paused) {
+            parsedFrameInfo.innerHTML = frameInfoSummary + `<br><span style="color: #c0392b;">- 提示：請先暫停影片後再進行逐幀切換！</span>`;
+            return; 
+        }
+
+        const step = parseInt(frameStepInput.value, 10) || 1;
+        const deltaFrames = direction * step;
+        const beforeTime = video.currentTime;
+
+        let targetTime = 0;
+
+        if (frameTimes.length > 0) {
+            let currentIdx = frameTimes.findIndex(t => t >= beforeTime);
+            if (currentIdx === -1) currentIdx = frameTimes.length - 1;
+
+            let targetIdx = Math.max(0, Math.min(frameTimes.length - 1, currentIdx + deltaFrames));
+            targetTime = frameTimes[targetIdx];
+        } else {
+            const currentFrameIndex = Math.round(beforeTime * detectedFPS);
+            const targetFrameIndex = Math.max(0, currentFrameIndex + deltaFrames);
+            targetTime = targetFrameIndex / detectedFPS;
+        }
+
+        video.currentTime = targetTime;
+
+        parsedFrameInfo.innerHTML = frameInfoSummary + `
+            <hr style="border: none; border-top: 1px solid #d0d7de; margin: 6px 0;">
+            - 切換紀錄: 切換前幀數時間於 ${beforeTime.toFixed(3)}s，切換 ${deltaFrames > 0 ? '+' : ''}${deltaFrames} frame 至 ${targetTime.toFixed(3)}s
+        `;
+    }
+
+    // 全螢幕按鈕觸發：設定 isFrameMode 旗標並進入全螢幕
+    function enterFullscreenFrameMode() {
+        if (!video.paused) {
+            video.pause();
+        }
+
+        isFrameMode = true; // 開啟逐幀全螢幕 Flag
+
+        if (video.requestFullscreen) {
+            video.requestFullscreen();
+        } else if (video.webkitRequestFullscreen) {
+            video.webkitRequestFullscreen();
+        }
+    }
+
+    // 【新增】離開全螢幕時自動重置 Flag
+    document.addEventListener('fullscreenchange', () => {
+        if (!document.fullscreenElement) {
+            isFrameMode = false;
+        }
+    });
+
+    function exportFramesToCSV() {
+        let csvContent = "data:text/csv;charset=utf-8,Frame_Index,Timestamp_Seconds\n";
+        
+        if (frameTimes.length > 0) {
+            frameTimes.forEach((time, index) => {
+                csvContent += `${index + 1},${time.toFixed(6)}\n`;
+            });
+        } else {
+            const totalFrames = Math.floor((video.duration || 0) * detectedFPS);
+            const frameDuration = 1 / detectedFPS;
+            for (let i = 0; i < totalFrames; i++) {
+                csvContent += `${i + 1},${(i * frameDuration).toFixed(6)}\n`;
+            }
+        }
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "video_frame_timestamps.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        showToast("CSV 匯出成功！");
+    }
+
+    // 4. 前後切換秒數
+    function executeSeek(seconds) {
+        if (!video.duration) return;
+        const isPlaying = !video.paused && !video.ended;
+        let targetTime = Math.max(0, Math.min(video.duration, video.currentTime + seconds));
+        
+        video.currentTime = targetTime;
+        if (isPlaying) {
+            video.play().catch(err => console.warn("Seek 後繼續播放失敗:", err));
+        }
+    }
+
+    function handleSeekKeyDown(e) {
+        if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const rewindSec = parseFloat(document.getElementById('rewindSec').value) || 10;
+            const forwardSec = parseFloat(document.getElementById('forwardSec').value) || 30;
+
+            if (e.key === 'ArrowLeft') {
+                executeSeek(-rewindSec);
+            } else {
+                executeSeek(forwardSec);
+            }
+        }
+    }
+
+    // 保持原本的事件綁定機制 (完全不改動)
+    seekArea.addEventListener('keydown', handleSeekKeyDown);
+    videoWrapper.addEventListener('keydown', handleSeekKeyDown, true);
+    video.addEventListener('keydown', handleSeekKeyDown, true);
+
+    // 全螢幕狀態下的鍵盤監聽（加上 isFrameMode 旗標判斷）
+    document.addEventListener('keydown', function (e) {
+        // 只有在全螢幕，且是從「逐幀區的全螢幕按鈕」觸發時，才攔截左右鍵執行逐幀切換
+        if (document.fullscreenElement && isFrameMode) {
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+                e.preventDefault();
+                e.stopPropagation();
+                handleFrameNav(e.key === 'ArrowRight' ? 1 : -1);
+            }
+        }
+    }, true);
+
+    frameArea.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+            e.preventDefault();
+            e.stopPropagation();
+            handleFrameNav(e.key === 'ArrowRight' ? 1 : -1);
+        }
+    });
+
+    // 5. 截圖 Modal
+    function openScreenshotModal() {
+        if (!video.videoWidth) {
+            alert("請先載入影片！");
+            return;
+        }
+
+        snapshotCanvas = document.createElement('canvas');
+        snapshotCanvas.width = video.videoWidth;
+        snapshotCanvas.height = video.videoHeight;
+        snapshotCanvas.getContext('2d').drawImage(video, 0, 0);
+
+        document.getElementById('jpgSize').innerText = '計算中...';
+        document.getElementById('pngSize').innerText = '計算中...';
+        document.getElementById('screenshotModal').style.display = 'flex';
+
+        snapshotCanvas.toBlob(blob => {
+            jpgBlob = blob;
+            document.getElementById('jpgSize').innerText = formatBytes(blob.size);
+        }, 'image/jpeg', 0.92);
+
+        snapshotCanvas.toBlob(blob => {
+            pngBlob = blob;
+            document.getElementById('pngSize').innerText = formatBytes(blob.size);
+        }, 'image/png');
+    }
+
+    function closeScreenshotModal() {
+        document.getElementById('screenshotModal').style.display = 'none';
+    }
+
+	function downloadScreenshot() {
+        const isJpg = document.getElementById('fmtJpg').checked;
+        const targetBlob = isJpg ? jpgBlob : pngBlob;
+        const ext = isJpg ? 'jpg' : 'png';
+
+        if (!targetBlob) return;
+
+        // 1. 取得原檔檔名（去除副檔名）
+        let baseName = "video";
+        if (currentFile && currentFile.name) {
+            baseName = currentFile.name.substring(0, currentFile.name.lastIndexOf('.')) || currentFile.name;
+        }
+
+        // 2. 取得目前格式化時間 (hh:mm:ss.sss) 並移除冒號轉為 hhmmss.sss
+        const timeFormatted = formatTimeWithMs(video.currentTime).replace(/:/g, '');
+
+        // 3. 組合檔名：AAA 000300.317.jpg / png
+        const fileName = `${baseName} ${timeFormatted}.${ext}`;
+
+        const url = URL.createObjectURL(targetBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        closeScreenshotModal();
+        showToast("截圖下載成功！");
+    }
+
+    function formatBytes(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    function showToast(msg) {
+        const toast = document.getElementById("toastMsg");
+        toast.innerText = msg;
+        toast.style.display = "block";
+        setTimeout(() => { toast.style.display = "none"; }, 2500);
+    }
+</script>
+</body>
+</html>
