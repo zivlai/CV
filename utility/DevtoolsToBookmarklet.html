@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>開發者工具 Console JS 轉書籤或我的最愛工具 | Utility</title>
+    <style>
+        :root {
+            --primary-color: #0066cc;
+            --primary-hover: #0052a3;
+            --bg-color: #f5f7fa;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --border-color: #cccccc;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background-color: var(--card-bg);
+            padding: 30px 30px 20px 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-bar {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-bar a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-size: 0.9em;
+        }
+
+        .nav-bar a:hover {
+            text-decoration: underline;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            margin: 0 0 15px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--bg-color);
+        }
+
+        .field-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 0.95rem;
+            box-sizing: border-box;
+            font-family: Consolas, Monaco, "Courier New", monospace;
+            height: 120px;
+            resize: vertical;
+        }
+
+        .action-area {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        /* 並列按鈕容器 */
+        .btn-row {
+            display: flex;
+            gap: 12px;
+            margin: 10px 0 15px 0;
+        }
+
+        button {
+            width: 100%;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            font-size: 0.95rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            box-sizing: border-box;
+            font-weight: 500;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+
+        .toast {
+            font-size: 0.85rem;
+            color: #28a745;
+            display: none;
+            margin-top: 10px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        /* Frame (Fieldset) 與 Toggle Switch 樣式 */
+        .options-fieldset {
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 4px 16px;
+            margin: 0 0 15px 0;
+            background-color: #fafafa;
+        }
+
+        .options-fieldset legend {
+            font-weight: bold;
+            font-size: 0.95rem;
+            color: var(--text-color);
+            padding: 0 6px;
+        }
+
+        .option-row {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 12px;
+            width: 100%;
+            padding: 8px 0;
+            box-sizing: border-box;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .option-row label.option-text {
+            margin: 0;
+            cursor: pointer;
+            font-weight: normal;
+            font-size: 0.95rem;
+            line-height: 1;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            width: 46px;
+            height: 24px;
+            flex-shrink: 0;
+            margin: 0;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc;
+            transition: .3s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary-color);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(22px);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- 1. 頂部導覽區 -->
+    <div class="nav-bar">
+        <a href="index.html">← 回到線上工具首頁</a>
+        <a href="../index.html">⌂ 回到網站主首頁</a>
+    </div>
+
+    <h1>DevTools Console JS 🔄 Bookmarklet or Favorites</h1>
+
+    <!-- 2. 上方：開發者工具 JS 輸入區 -->
+    <div class="field-group">
+        <label for="inputText">DevTools Console JS 格式：</label>
+        <textarea id="inputText" placeholder="請在此貼上要在開發者工具執行的 JavaScript 程式碼..."></textarea>
+    </div>
+
+    <!-- 3. 中間：雙藍色按鈕與優化箭頭 Icon -->
+    <div class="btn-row">
+        <button onclick="convertToBookmarkletAction()">⬇ 轉換為 Bookmarklet or Favorites</button>
+        <button onclick="convertToDevToolsAction()">⬆ 轉換為 DevTools Console JS</button>
+    </div>
+
+    <!-- 4. 下方：書籤網址格式區 -->
+    <div class="field-group" style="margin-bottom: 10px;">
+        <label for="outputText">Bookmarklet or Favorites 格式：</label>
+        <textarea id="outputText" placeholder="轉換後的 javascript:... 語法將顯示於此..."></textarea>
+    </div>
+
+    <!-- 5. 轉換選項區 -->
+    <fieldset class="options-fieldset">
+        <legend>轉換選項</legend>
+        <div class="option-row" onclick="document.getElementById('autoCopy').click()">
+            <label class="switch" onclick="event.stopPropagation()">
+                <input type="checkbox" id="autoCopy">
+                <span class="slider"></span>
+            </label>
+            <label for="autoCopy" class="option-text" onclick="event.stopPropagation()">轉換後自動複製到剪貼簿</label>
+        </div>
+    </fieldset>
+
+    <!-- 6. 底部雙複製按鈕區 -->
+    <div class="btn-row" style="margin: 0;">
+        <button type="button" class="btn-secondary" onclick="copyText('inputText', '已複製 JS 程式碼到剪貼簿！')">複製 DevTools Console JS</button>
+        <button type="button" class="btn-secondary" onclick="copyText('outputText', '已複製書籤網址到剪貼簿！')">複製 Bookmarklet or Favorites</button>
+    </div>
+    
+    <!-- 提示訊息預設隱藏，僅在複製成功時觸發顯示 -->
+    <div id="copyToast" class="toast"></div>
+</div>
+
+<script>
+    let isInitialLoad = true;
+    const DEFAULT_SAMPLE_CODE = "alert('Hello JS');";
+    let toastTimer = null;
+
+    window.onload = function() {
+        document.getElementById("inputText").value = DEFAULT_SAMPLE_CODE;
+        // 首次載入執行預設向下轉換
+        convertToBookmarkletAction();
+    };
+
+    // 觸發：向下轉換為書籤
+    function convertToBookmarkletAction() {
+        const inputVal = document.getElementById("inputText").value;
+        if (!inputVal.trim()) {
+            document.getElementById("outputText").value = "";
+            return;
+        }
+
+        const result = codeToBookmarklet(inputVal);
+        document.getElementById("outputText").value = result;
+
+        // 轉換目標是下方的 outputText (書籤網址)
+        handlePostConvert("inputText", "outputText", "已複製書籤網址到剪貼簿！");
+    }
+
+    // 觸發：向上還原為開發者工具 JS
+    function convertToDevToolsAction() {
+        const outputVal = document.getElementById("outputText").value;
+        if (!outputVal.trim()) {
+            document.getElementById("inputText").value = "";
+            return;
+        }
+
+        const result = bookmarkletToCode(outputVal);
+        document.getElementById("inputText").value = result;
+
+        // 轉換目標是上方的 inputText (JS 程式碼)
+        handlePostConvert("outputText", "inputText", "已複製 JS 程式碼到剪貼簿！");
+    }
+
+    // 將普通 JS 壓平打包為 Bookmarklet
+    function codeToBookmarklet(code) {
+        let trimmed = code.trim();
+        trimmed = trimmed.replace(/\/\/.*/g, ''); // 移除單行註解
+        let singleLine = trimmed.replace(/\s+/g, ' '); // 壓縮空白與換行
+
+        if (!singleLine.endsWith(';')) {
+            singleLine += ';';
+        }
+
+        if (singleLine.startsWith('javascript:')) {
+            return singleLine;
+        }
+
+        return `javascript:(function(){${singleLine}})();`;
+    }
+
+    // 將 Bookmarklet 解碼還原為普通 JS
+    function bookmarkletToCode(bm) {
+        let trimmed = bm.trim();
+        
+        if (trimmed.startsWith('javascript:')) {
+            trimmed = trimmed.replace(/^javascript:/, '').trim();
+        }
+
+        const iifeMatch = trimmed.match(/^\(function\(\)\{(.*)\}\)\(\);?$/);
+        if (iifeMatch) {
+            trimmed = iifeMatch[1].trim();
+        }
+
+        try {
+            trimmed = decodeURIComponent(trimmed);
+        } catch(e) {}
+
+        return trimmed;
+    }
+
+    // 處理轉換完成後的選取與自動複製邏輯
+    function handlePostConvert(focusTargetId, copyTargetId, toastMsg) {
+        setTimeout(() => {
+            const elem = document.getElementById(focusTargetId);
+            if (elem) {
+                elem.focus();
+                elem.select();
+            }
+        }, 0);
+
+        const autoCopyElem = document.getElementById("autoCopy");
+
+        if (isInitialLoad) {
+            if (autoCopyElem.checked) {
+                copyText(copyTargetId, toastMsg);
+            }
+            autoCopyElem.checked = true;
+            isInitialLoad = false;
+            return;
+        }
+
+        if (autoCopyElem.checked) {
+            copyText(copyTargetId, toastMsg);
+        }
+    }
+
+    // 顯示動態 Toast 提示
+    function showToast(message) {
+        const toast = document.getElementById("copyToast");
+        toast.innerText = message;
+        toast.style.display = "block";
+        
+        if (toastTimer) clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => {
+            toast.style.display = "none";
+        }, 3000);
+    }
+
+    // 通用複製函式
+    function copyText(elementId, toastMsg) {
+        const elem = document.getElementById(elementId);
+        const textToCopy = elem ? elem.value : "";
+
+        if (!textToCopy) return false;
+
+        const tempTextArea = document.createElement("textarea");
+        tempTextArea.value = textToCopy;
+        document.body.appendChild(tempTextArea);
+        tempTextArea.select();
+        
+        try {
+            document.execCommand("copy");
+            showToast(toastMsg);
+        } catch (err) {
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                showToast(toastMsg);
+            });
+        } finally {
+            document.body.removeChild(tempTextArea);
+        }
+
+        return true;
+    }
+</script>
+</body>
+</html>
