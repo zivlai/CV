@@ -280,7 +280,7 @@
 
         <!-- 2. 影片播放區 -->
         <div class="video-wrapper" id="videoWrapper" tabindex="0">
-            <video id="videoPlayer" controls></video>
+            <video id="videoPlayer" controls tabindex="0"></video>
         </div>
 
         <!-- 3. 秒數及前後切換 -->
@@ -626,9 +626,10 @@
 
     // 全螢幕按鈕觸發：設定 isFrameMode 旗標並進入全螢幕
     function enterFullscreenFrameMode() {
-        if (!video.paused) {
-            video.pause();
-        }
+        // 若要進全螢幕時停下來則 Uncomment
+		// if (!video.paused) {
+        //     video.pause();
+        // }
 
         isFrameMode = true; // 開啟逐幀全螢幕 Flag
 
@@ -639,9 +640,12 @@
         }
     }
 
-    // 【新增】離開全螢幕時自動重置 Flag
-    document.addEventListener('fullscreenchange', () => {
-        if (!document.fullscreenElement) {
+	document.addEventListener('fullscreenchange', () => {
+        if (document.fullscreenElement) {
+            // 進入全螢幕時，直接將鍵盤焦點強制移給 video 元素
+            video.focus();
+        } else {
+            // 離開全螢幕時自動重置 Flag
             isFrameMode = false;
         }
     });
