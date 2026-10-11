@@ -35,6 +35,13 @@
             text-decoration: underline;
         }
 
+        /* 按鈕容器 */
+        .button-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
         /* 靠左的小按鈕 */
         button.action-btn {
             display: inline-block;
@@ -51,6 +58,12 @@
 
         button.action-btn:hover {
             opacity: 0.85;
+        }
+
+        /* 當進入全螢幕時，自動將所有介面元素隱藏，保留百分之百純淨背景 */
+        :fullscreen .nav-link,
+        :fullscreen .button-group {
+            display: none !important;
         }
 
         /* 彈跳視窗樣式 */
@@ -152,9 +165,10 @@
     <!-- 1. 頂部返回連結 -->
     <a href="../index.html" class="nav-link">← 回到網站主首頁</a>        
 
-    <!-- 2. 靠左的小按鈕 -->
-    <div>
+    <!-- 2. 按鈕區 (選擇背景顏色 + 全螢幕) -->
+    <div class="button-group">
         <button type="button" class="action-btn" onclick="openColorPicker()">選擇背景顏色</button>
+        <button type="button" class="action-btn" onclick="toggleFullscreen()">全螢幕</button>
     </div>
 
     <!-- 調色盤 Modal -->
@@ -165,16 +179,16 @@
             <!-- iro.js 圓形色盤容器 -->
             <div id="picker"></div>
 
-            <!-- 預設快速顏色圓形按鈕 (黑、白、紅、綠、藍) -->
+            <!-- 預設快速顏色圓形按鈕 (白、黑、紅、綠、藍) -->
             <div class="preset-colors">
                 <div class="preset-circle" style="background-color: #ffffff;" onclick="selectPreset('#ffffff')" title="白"></div>
-                <div class="preset-circle" style="background-color: #000000;" onclick="selectPreset('#000000')" title="黑"></div>                
+                <div class="preset-circle" style="background-color: #000000;" onclick="selectPreset('#000000')" title="黑"></div>
                 <div class="preset-circle" style="background-color: #ff0000;" onclick="selectPreset('#ff0000')" title="紅"></div>
                 <div class="preset-circle" style="background-color: #00ff00;" onclick="selectPreset('#00ff00')" title="綠"></div>
                 <div class="preset-circle" style="background-color: #0000ff;" onclick="selectPreset('#0000ff')" title="藍"></div>
             </div>
 
-            <!-- 手動輸入區 (#RRGGBB 與 RGB，字母會強制大寫) -->
+            <!-- 手動輸入區 (#RRGGBB 與 RGB，字母大寫) -->
             <div class="input-group">
                 <label for="hexInput">Hex 色碼：</label>
                 <input type="text" id="hexInput" oninput="updateFromHex(this.value)">
@@ -253,7 +267,6 @@
         }
         const fullHex = '#' + cleanHex.toUpperCase();
         
-        // 確保 Hex 顯示大寫
         document.getElementById('hexInput').value = fullHex;
 
         const r = parseInt(cleanHex.substr(0, 2), 16) || 0;
@@ -282,7 +295,7 @@
     // 透過 Hex 輸入連動
     function updateFromHex(val) {
         if (/^#?[0-9A-Fa-f]{3}$\vert{}^#?[0-9A-Fa-f]{6}$/.test(val)) {
-            let fullHex = val.startsWith('#' ) ? val : '#' + val;
+            let fullHex = val.startsWith('#') ? val : '#' + val;
             colorPicker.color.hexString = fullHex;
             applyBackgroundColor(fullHex);
             syncInputs(fullHex);
@@ -303,6 +316,19 @@
         colorPicker.color.hexString = hex;
         applyBackgroundColor(hex);
         document.getElementById('hexInput').value = hex;
+    }
+
+    // 全螢幕切換功能
+    function toggleFullscreen() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(err => {
+                alert(`無法進入全螢幕: ${err.message}`);
+            });
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            }
+        }
     }
 </script>
 
