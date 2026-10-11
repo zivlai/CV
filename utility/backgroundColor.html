@@ -23,15 +23,20 @@
             transition: background-color 0.1s, color 0.1s;
         }
 
-        .nav-link {
-            display: inline-block;
+        .nav-bar {
             margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-bar a {
             color: var(--text-color);
             text-decoration: none;
+            font-size: 0.9em;
             font-weight: 500;
         }
 
-        .nav-link:hover {
+        .nav-bar a:hover {
             text-decoration: underline;
         }
 
@@ -61,7 +66,7 @@
         }
 
         /* 當進入全螢幕時，自動將所有介面元素隱藏，保留百分之百純淨背景 */
-        :fullscreen .nav-link,
+        :fullscreen .nav-bar,
         :fullscreen .button-group {
             display: none !important;
         }
@@ -162,8 +167,11 @@
 </head>
 <body>
 
-    <!-- 1. 頂部返回連結 -->
-    <a href="../index.html" class="nav-link">← 回到網站主首頁</a>        
+    <!-- 1. 頂部導覽列（包含兩個返回連結） -->
+    <div class="nav-bar">
+        <a href="index.html">← 回到線上工具首頁</a>
+        <a href="../index.html">⌂ 回到網站主首頁</a>
+    </div>
 
     <!-- 2. 按鈕區 (選擇背景顏色 + 全螢幕) -->
     <div class="button-group">
